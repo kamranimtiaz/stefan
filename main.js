@@ -401,6 +401,8 @@ class ScrollAnimationManager {
     // Calculate and set the scroller height
     const calculatedHeight = items.length * config.heightMultiplier;
     element.style.height = `${calculatedHeight}svh`;
+    
+    ScrollTrigger.refresh()
 
     // Calculate scroll distance
     const visibleWidth = element.offsetWidth;
@@ -414,8 +416,8 @@ class ScrollAnimationManager {
       scrollTrigger: {
         trigger: element,
         start: "top top",
-        end: "bottom bottom",
-        markers: true,
+        end: "bottom-=2.5rem bottom",
+        // markers: true,
         scrub: true,
       },
     });
@@ -660,6 +662,14 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = DesktopScrollManager;
 }
 
+
+
 // Make available globally
 window.DesktopScrollManager = DesktopScrollManager;
 window.scrollManager = scrollManager;
+
+if (document.fonts) {
+  document.fonts.ready.then(() => {
+    setTimeout(() => ScrollTrigger.refresh(), 100);
+  });
+}
