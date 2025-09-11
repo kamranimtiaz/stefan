@@ -5,6 +5,8 @@
  */
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
+const MOBILE_SCROLLER = ".page_wrap";
+
 /**
  * Mobile detection function from the main codebase
  */
@@ -23,11 +25,21 @@ window.isMobile = function () {
   return userAgentCheck;
 };
 
+function getScrollContainer() {
+  if (isMobile()) {
+    return (
+      document.querySelector(`${MOBILE_SCROLLER}`) ||
+      document.querySelector("main") ||
+      window
+    );
+  }
+  return window;
+}
+
 class DesktopScrollManager {
   constructor() {
     this.lenis = null;
     this.resizeTimeout = null;
-    this.scrollerElement = ".page_wrap"; // Define your scroller element
     this.init();
   }
 
@@ -45,33 +57,21 @@ class DesktopScrollManager {
    */
   configureMobileSettings() {
     if (isMobile()) {
-      // Add the same classes as the main codebase
       document.body.classList.add("disable-cursor", "viewport-mobile");
 
-      // Apply fixed viewport class if lenis was enabled
       if (document.body.classList.contains("enable-lenis")) {
         document.body.classList.replace("enable-lenis", "fixed-viewport");
       } else {
         document.body.classList.add("fixed-viewport");
       }
 
-      // Set ScrollTrigger to use main as scroller (like the main codebase)
-      ScrollTrigger.defaults({ scroller: this.scrollerElement });
-
-      // Update viewport height like the main codebase
       this.updateViewportHeight();
     } else {
-      // Remove mobile classes if not mobile
       document.body.classList.remove(
         "disable-cursor",
         "viewport-mobile",
         "fixed-viewport"
       );
-
-      // Reset ScrollTrigger to use window
-      ScrollTrigger.defaults({ scroller: window });
-
-      // Add enable-lenis class for desktop
       document.body.classList.add("enable-lenis");
     }
   }
@@ -134,15 +134,15 @@ class DesktopScrollManager {
       requestAnimationFrame(raf.bind(this));
 
       // Stop Lenis initially like the main codebase
-    //   this.lenis.stop();
+      //   this.lenis.stop();
 
       // Start Lenis after a delay (like main codebase)
-    //   gsap.delayedCall(1, () => {
-    //     if (this.lenis) {
-    //       this.lenis.start();
-          
-    //     }
-    //   });
+      //   gsap.delayedCall(1, () => {
+      //     if (this.lenis) {
+      //       this.lenis.start();
+
+      //     }
+      //   });
     }
 
     console.log("Lenis smooth scroll initialized for desktop");
@@ -167,8 +167,6 @@ class DesktopScrollManager {
     this.resizeTimeout = setTimeout(() => {
       // Update viewport height on resize for mobile
       this.updateViewportHeight();
-
-      // Reconfigure based on mobile detection
       this.configureMobileSettings();
 
       const shouldEnable = this.shouldEnableScroll();
@@ -222,7 +220,6 @@ class DesktopScrollManager {
    * Public method to manually refresh the scroll state
    */
   refresh() {
-    this.configureMobileSettings();
     const shouldEnable = this.shouldEnableScroll();
 
     if (shouldEnable && !this.lenis) {
@@ -232,6 +229,7 @@ class DesktopScrollManager {
     }
 
     ScrollTrigger.refresh();
+    this.configureMobileSettings();
   }
 
   /**
@@ -311,9 +309,6 @@ class ScrollAnimationManager {
   /**
    * Get the appropriate scroller for ScrollTrigger based on mobile detection
    */
-  getScroller() {
-    return isMobile() ? "main" : window;
-  }
 
   /**
    * Text reveal animation (adapted for mobile/desktop)
@@ -338,7 +333,6 @@ class ScrollAnimationManager {
     const timeline = gsap.timeline({
       scrollTrigger: {
         trigger: element,
-        scroller: this.getScroller(), // Use appropriate scroller
         start: config.trigger,
         end: config.end,
         scrub: config.scrub || 1,
@@ -366,7 +360,6 @@ class ScrollAnimationManager {
   createScrollTriggerConfig(element, config) {
     return {
       trigger: element,
-      scroller: this.getScroller(),
       start: config.trigger,
       end: config.end,
       scrub: config.scrub,
@@ -380,6 +373,11 @@ class ScrollAnimationManager {
    */
 
   setupHorizontalScroll(element, config) {
+    // Run only on desktop
+    if(isMobile()) {
+      return;
+    }
+    
     // Get the first matching item
     const firstItem = element.querySelector(config.items);
 
@@ -401,8 +399,8 @@ class ScrollAnimationManager {
     // Calculate and set the scroller height
     const calculatedHeight = items.length * config.heightMultiplier;
     element.style.height = `${calculatedHeight}svh`;
-    
-    ScrollTrigger.refresh()
+
+    ScrollTrigger.refresh();
 
     // Calculate scroll distance
     const visibleWidth = element.offsetWidth;
@@ -604,7 +602,6 @@ function animateScrollerHeadings() {
     const timeline = gsap.timeline({
       scrollTrigger: {
         trigger: heading,
-        scroller: isMobile() ? "main" : window, // Use appropriate scroller
         start: "top 90%",
         end: "top center",
         scrub: true,
@@ -635,7 +632,6 @@ function animateStoryScaling() {
 
     ScrollTrigger.create({
       trigger: currentSection,
-      scroller: isMobile() ? "main" : window, // Use appropriate scroller
       start: "top bottom",
       end: "bottom top",
       scrub: true,
@@ -647,6 +643,9 @@ function animateStoryScaling() {
     });
   }
 }
+
+
+ScrollTrigger.defaults({ scroller: getScrollContainer() });
 
 // Initialize the animations
 animateStoryScaling();
@@ -661,8 +660,6 @@ const scrollManager = new DesktopScrollManager();
 if (typeof module !== "undefined" && module.exports) {
   module.exports = DesktopScrollManager;
 }
-
-
 
 // Make available globally
 window.DesktopScrollManager = DesktopScrollManager;
