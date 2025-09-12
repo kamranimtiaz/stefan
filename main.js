@@ -374,10 +374,10 @@ class ScrollAnimationManager {
 
   setupHorizontalScroll(element, config) {
     // Run only on desktop
-    if(isMobile()) {
+    if (isMobile()) {
       return;
     }
-    
+
     // Get the first matching item
     const firstItem = element.querySelector(config.items);
 
@@ -400,12 +400,12 @@ class ScrollAnimationManager {
     const calculatedHeight = items.length * config.heightMultiplier;
     element.style.height = `${calculatedHeight}svh`;
 
-    ScrollTrigger.refresh();
-
     // Calculate scroll distance
     const visibleWidth = element.offsetWidth;
     const wrapperWidth = listContainer.scrollWidth;
     const totalScrollDistance = wrapperWidth - visibleWidth;
+
+    
 
     // Create the horizontal scroll animation
     const scrollAnimation = gsap.to(listContainer, {
@@ -415,10 +415,13 @@ class ScrollAnimationManager {
         trigger: element,
         start: "top top",
         end: "bottom-=2.5rem bottom",
-        // markers: true,
+        markers: true,
+        invalidateOnRefresh: true,
         scrub: true,
       },
     });
+
+    ScrollTrigger.refresh();
 
     console.log(`Applied horizontal scroll animation:`, {
       visibleWidth,
@@ -546,28 +549,92 @@ class ScrollAnimationManager {
   /**
    * Initialize all animations
    */
-  initAnimations() {
+  // initAnimations() {
+  //   const animationConfigs = this.getAnimationConfigs();
+  //   const elementsWithAnimations = document.querySelectorAll(
+  //     "[data-scroll-animation]"
+  //   );
+
+  //   elementsWithAnimations.forEach((element, index) => {
+  //     const config = this.parseAnimationData(element);
+  //     const animationSetup = animationConfigs[config.type];
+
+  //     if (animationSetup) {
+  //       try {
+  //         animationSetup(element, config);
+  //         this.animations.set(`animation-${index}`, { element, config });
+  //         console.log(`Applied ${config.type} animation to:`, element);
+  //       } catch (error) {
+  //         console.warn(`Failed to apply ${config.type} animation:`, error);
+  //       }
+  //     } else {
+  //       console.warn(`Unknown animation type: ${config.type}`);
+  //     }
+  //   });
+  // }
+
+  async initAnimations() {
     const animationConfigs = this.getAnimationConfigs();
     const elementsWithAnimations = document.querySelectorAll(
       "[data-scroll-animation]"
     );
 
-    elementsWithAnimations.forEach((element, index) => {
-      const config = this.parseAnimationData(element);
-      const animationSetup = animationConfigs[config.type];
+    console.log(
+      `Initializing ${elementsWithAnimations.length} scroll animations...`
+    );
 
-      if (animationSetup) {
-        try {
-          animationSetup(element, config);
-          this.animations.set(`animation-${index}`, { element, config });
-          console.log(`Applied ${config.type} animation to:`, element);
-        } catch (error) {
-          console.warn(`Failed to apply ${config.type} animation:`, error);
-        }
-      } else {
-        console.warn(`Unknown animation type: ${config.type}`);
+    // Process all animations
+    const animationPromises = Array.from(elementsWithAnimations).map(
+      async (element, index) => {
+        return new Promise((resolve) => {
+          const config = this.parseAnimationData(element);
+          const animationSetup = animationConfigs[config.type];
+
+          if (animationSetup) {
+            try {
+              animationSetup(element, config);
+              this.animations.set(`animation-${index}`, { element, config });
+              console.log(`Applied ${config.type} animation to:`, element);
+              resolve({ success: true, type: config.type, index });
+            } catch (error) {
+              console.warn(`Failed to apply ${config.type} animation:`, error);
+              resolve({ success: false, type: config.type, index, error });
+            }
+          } else {
+            console.warn(`Unknown animation type: ${config.type}`);
+            resolve({
+              success: false,
+              type: config.type,
+              index,
+              error: "Unknown type",
+            });
+          }
+        });
       }
-    });
+    );
+
+    // Wait for all animations to be processed
+    const results = await Promise.all(animationPromises);
+
+    // Count successful animations
+    const successfulAnimations = results.filter(
+      (result) => result.success
+    ).length;
+    const failedAnimations = results.length - successfulAnimations;
+
+    console.log(
+      `Animation setup complete: ${successfulAnimations} successful, ${failedAnimations} failed`
+    );
+
+    // Refresh ScrollTrigger after 300ms delay
+    setTimeout(() => {
+      ScrollTrigger.refresh();
+      console.log(
+        `ScrollTrigger refreshed after ${results.length} animations processed (300ms delay)`
+      );
+    }, 100);
+
+    return results;
   }
 
   /**
@@ -583,6 +650,27 @@ class ScrollAnimationManager {
   addAnimationType(name, setupFunction) {
     const configs = this.getAnimationConfigs();
     configs[name] = setupFunction.bind(this);
+  }
+}
+function animateHeroDarkOverlay() {
+  const heroSection = document.querySelector(".main_hero_section");
+  const darkOverlay = document.querySelector(".hero_dark_overlay");
+
+  if (heroSection && darkOverlay) {
+    gsap.to(darkOverlay, {
+      opacity: 0.7,
+      ease: "none",
+      scrollTrigger: {
+        trigger: heroSection,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+      },
+    });
+
+    console.log("Hero dark overlay animation initialized");
+  } else {
+    console.warn("Hero section or dark overlay element not found");
   }
 }
 
@@ -644,29 +732,32 @@ function animateStoryScaling() {
   }
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+  ScrollTrigger.defaults({ scroller: getScrollContainer() });
 
-ScrollTrigger.defaults({ scroller: getScrollContainer() });
+  // Initialize the animations
+  animateStoryScaling();
 
-// Initialize the animations
-animateStoryScaling();
+  // Initialize the animation manager
+  const scrollAnimationManager = new ScrollAnimationManager();
 
-// Initialize the animation manager
-const scrollAnimationManager = new ScrollAnimationManager();
+  // Initialize the scroll manager
+  const scrollManager = new DesktopScrollManager();
 
-// Initialize the scroll manager
-const scrollManager = new DesktopScrollManager();
+  // Export for use in other scripts
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = DesktopScrollManager;
+  }
 
-// Export for use in other scripts
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = DesktopScrollManager;
-}
+  // Make available globally
+  window.DesktopScrollManager = DesktopScrollManager;
+  window.scrollManager = scrollManager;
+  animateHeroDarkOverlay();
 
-// Make available globally
-window.DesktopScrollManager = DesktopScrollManager;
-window.scrollManager = scrollManager;
-
-if (document.fonts) {
-  document.fonts.ready.then(() => {
-    setTimeout(() => ScrollTrigger.refresh(), 100);
-  });
-}
+  // Font loading check
+  // if (document.fonts) {
+  //   document.fonts.ready.then(() => {
+  //     setTimeout(() => ScrollTrigger.refresh(), 10000);
+  //   });
+  // }
+});
