@@ -655,23 +655,44 @@ class ScrollAnimationManager {
 function animateHeroDarkOverlay() {
   const heroSection = document.querySelector(".main_hero_section");
   const darkOverlay = document.querySelector(".hero_dark_overlay");
+  const heroVideo = document.querySelector(".main_hero_section video");
 
-  if (heroSection && darkOverlay) {
-    gsap.to(darkOverlay, {
+  if (!heroSection) {
+    console.warn("Hero section not found");
+    return;
+  }
+
+  // Create a unified timeline for all hero animations
+  const heroTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: heroSection,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
+    },
+  });
+
+  // Add dark overlay animation if element exists
+  if (darkOverlay) {
+    heroTimeline.to(darkOverlay, {
       opacity: 0.7,
       ease: "none",
-      scrollTrigger: {
-        trigger: heroSection,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: true,
-      },
-    });
-
-    console.log("Hero dark overlay animation initialized");
+    }, 0); // Start at time 0
   } else {
-    console.warn("Hero section or dark overlay element not found");
+    console.warn("Hero dark overlay element not found");
   }
+
+  // Add video translation animation if element exists
+  if (heroVideo) {
+    heroTimeline.to(heroVideo, {
+      yPercent: -7.5,
+      ease: "none",
+    }, 0); // Start at time 0 (same time as overlay)
+  } else {
+    console.warn("Hero video element not found");
+  }
+
+  console.log("Hero timeline animation initialized with available elements");
 }
 
 function animateScrollerHeadings() {
