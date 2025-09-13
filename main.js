@@ -405,8 +405,6 @@ class ScrollAnimationManager {
     const wrapperWidth = listContainer.scrollWidth;
     const totalScrollDistance = wrapperWidth - visibleWidth;
 
-    
-
     // Create the horizontal scroll animation
     const scrollAnimation = gsap.to(listContainer, {
       x: -totalScrollDistance,
@@ -652,10 +650,11 @@ class ScrollAnimationManager {
     configs[name] = setupFunction.bind(this);
   }
 }
-function animateHeroDarkOverlay() {
+function animateHero() {
   const heroSection = document.querySelector(".main_hero_section");
   const darkOverlay = document.querySelector(".hero_dark_overlay");
   const heroVideo = document.querySelector(".main_hero_section video");
+  const navLogo = document.querySelector(".nav_link_logo");
 
   if (!heroSection) {
     console.warn("Hero section not found");
@@ -669,25 +668,52 @@ function animateHeroDarkOverlay() {
       start: "top top",
       end: "bottom bottom",
       scrub: true,
+      onUpdate: (self) => {
+        const progress = self.progress;
+
+        if (progress >= 0.2) {
+          // Fade out when progress reaches 20%
+          gsap.to(navLogo, {
+            opacity: 0,
+            duration: 0.3,
+            ease: "power2.out",
+          });
+        } else {
+          // Fade back in when progress is below 20%
+          gsap.to(navLogo, {
+            opacity: 1,
+            duration: 0.3,
+            ease: "power2.out",
+          });
+        }
+      },
     },
   });
 
   // Add dark overlay animation if element exists
   if (darkOverlay) {
-    heroTimeline.to(darkOverlay, {
-      opacity: 0.7,
-      ease: "none",
-    }, 0); // Start at time 0
+    heroTimeline.to(
+      darkOverlay,
+      {
+        opacity: 0.7,
+        ease: "none",
+      },
+      0
+    ); // Start at time 0
   } else {
     console.warn("Hero dark overlay element not found");
   }
 
   // Add video translation animation if element exists
   if (heroVideo) {
-    heroTimeline.to(heroVideo, {
-      yPercent: -7.5,
-      ease: "none",
-    }, 0); // Start at time 0 (same time as overlay)
+    heroTimeline.to(
+      heroVideo,
+      {
+        yPercent: -7.5,
+        ease: "none",
+      },
+      0
+    ); // Start at time 0 (same time as overlay)
   } else {
     console.warn("Hero video element not found");
   }
@@ -753,6 +779,74 @@ function animateStoryScaling() {
   }
 }
 
+function initNavbarAnimation() {
+  const navKnob = document.querySelector(".nav_link_knob");
+  const navMain = document.querySelector(".nav_main");
+  const navWrap = document.querySelector(".nav_wrap");
+
+
+  if (!navKnob || !navMain || !navWrap) {
+    console.warn("Navbar elements not found:", {
+      knob: !!navKnob,
+      navMain: !!navMain,
+      wrap: !!navWrap
+    });
+    return;
+  }
+
+  // Store the default margin-top value
+  const computedStyle = window.getComputedStyle(navMain);
+  const defaultMarginTop = computedStyle.marginTop;
+  
+  console.log("Default nav_main margin-top:", defaultMarginTop);
+
+  // Set initial state
+  let isOpen = false;
+
+  function toggleNavbar() {
+    if (!isOpen) {
+      // Open navbar
+      navKnob.classList.add("is-opened");
+      navWrap.classList.add("is-opened");
+      gsap.to(navMain, {
+        marginTop: "0px",
+        duration: 0.5,
+        ease: "power2.out"
+      });
+      isOpen = true;
+      console.log("Navbar opened");
+    } else {
+      // Close navbar
+      navKnob.classList.remove("is-opened");
+      navWrap.classList.remove("is-opened");
+      gsap.to(navMain, {
+        marginTop: defaultMarginTop,
+        duration: 0.5,
+        ease: "power2.out"
+      });
+      isOpen = false;
+      console.log("Navbar closed");
+    }
+  }
+
+  // Add click event listener
+  navKnob.addEventListener("click", toggleNavbar);
+
+  console.log("Navbar animation initialized");
+
+  // Return public methods for external control
+  return {
+    open: () => {
+      if (!isOpen) toggleNavbar();
+    },
+    close: () => {
+      if (isOpen) toggleNavbar();
+    },
+    toggle: toggleNavbar,
+    isOpen: () => isOpen
+  };
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   ScrollTrigger.defaults({ scroller: getScrollContainer() });
 
@@ -773,7 +867,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // Make available globally
   window.DesktopScrollManager = DesktopScrollManager;
   window.scrollManager = scrollManager;
-  animateHeroDarkOverlay();
+  animateHero();
+
+  const navbarController = initNavbarAnimation();
 
   // Font loading check
   // if (document.fonts) {
