@@ -784,12 +784,11 @@ function initNavbarAnimation() {
   const navMain = document.querySelector(".nav_main");
   const navWrap = document.querySelector(".nav_wrap");
 
-
   if (!navKnob || !navMain || !navWrap) {
     console.warn("Navbar elements not found:", {
       knob: !!navKnob,
       navMain: !!navMain,
-      wrap: !!navWrap
+      wrap: !!navWrap,
     });
     return;
   }
@@ -797,7 +796,7 @@ function initNavbarAnimation() {
   // Store the default margin-top value
   const computedStyle = window.getComputedStyle(navMain);
   const defaultMarginTop = computedStyle.marginTop;
-  
+
   console.log("Default nav_main margin-top:", defaultMarginTop);
 
   // Set initial state
@@ -811,7 +810,7 @@ function initNavbarAnimation() {
       gsap.to(navMain, {
         marginTop: "0px",
         duration: 0.5,
-        ease: "power2.out"
+        ease: "power2.out",
       });
       isOpen = true;
       console.log("Navbar opened");
@@ -822,7 +821,7 @@ function initNavbarAnimation() {
       gsap.to(navMain, {
         marginTop: defaultMarginTop,
         duration: 0.5,
-        ease: "power2.out"
+        ease: "power2.out",
       });
       isOpen = false;
       console.log("Navbar closed");
@@ -843,8 +842,69 @@ function initNavbarAnimation() {
       if (isOpen) toggleNavbar();
     },
     toggle: toggleNavbar,
-    isOpen: () => isOpen
+    isOpen: () => isOpen,
   };
+}
+
+function initFooterAnimation() {
+  const footerSection = document.querySelector(".footer_section");
+  const navKnob = document.querySelector(".nav_link_knob");
+  const navLogo = document.querySelector(".nav_link_logo");
+  const navWrap = document.querySelector(".nav_wrap");
+
+  if (!footerSection) {
+    console.warn("Footer section not found");
+    return;
+  }
+
+  if (!navKnob) {
+    console.warn("Nav knob not found");
+    return;
+  }
+
+  if (!navLogo) {
+    console.warn("Nav logo not found");
+    return;
+  }
+
+  ScrollTrigger.create({
+    trigger: footerSection,
+    start: "bottom bottom",
+    onEnter: () => {
+      // Only trigger on desktop
+      if (!isMobile()) {
+        if (navWrap && !navWrap.classList.contains("is-opened")) {
+          navKnob.click(); // Triggers the existing navbar animation
+        }
+      }
+      // Fade in the logo
+      gsap.to(navLogo, {
+        opacity: 1,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+    },
+    onEnterBack: () => {
+      
+    },
+    onLeaveBack:() =>{
+      console.log("Footer going out of the view");
+      if (!isMobile()) {
+        console.log("Footer going out of the view")
+        if (navWrap && navWrap.classList.contains("is-opened")) {
+          navKnob.click(); // Triggers the existing navbar animation
+        }
+      }
+      // Check if navbar is open and close it
+      gsap.to(navLogo, {
+        opacity: 0,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+    }
+  });
+
+  console.log("Footer animation initialized");
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -870,6 +930,7 @@ document.addEventListener("DOMContentLoaded", function () {
   animateHero();
 
   const navbarController = initNavbarAnimation();
+  const footerController = initFooterAnimation();
 
   // Font loading check
   // if (document.fonts) {
