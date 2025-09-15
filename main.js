@@ -413,7 +413,7 @@ class ScrollAnimationManager {
         trigger: element,
         start: "top top",
         end: "bottom-=2.5rem bottom",
-        markers: true,
+        // markers: true,
         invalidateOnRefresh: true,
         scrub: true,
       },
