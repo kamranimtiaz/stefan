@@ -866,10 +866,12 @@ function initFooterAnimation() {
     console.warn("Nav logo not found");
     return;
   }
-
+console.log(footerSection)
   ScrollTrigger.create({
     trigger: footerSection,
-    start: "bottom bottom",
+    // start: "bottom bottom-=10",   // fire 1px earlier
+    start: "top top",
+    // markers: true,
     onEnter: () => {
       // Only trigger on desktop
       if (!isMobile()) {
