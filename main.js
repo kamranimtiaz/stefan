@@ -870,7 +870,7 @@ console.log(footerSection)
   ScrollTrigger.create({
     trigger: footerSection,
     // start: "bottom bottom-=10",   // fire 1px earlier
-    start: "top top",
+    start: "top top+=10",
     invalidateOnRefresh: true,
     // markers: true,
     onEnter: () => {
