@@ -871,6 +871,7 @@ console.log(footerSection)
     trigger: footerSection,
     // start: "bottom bottom-=10",   // fire 1px earlier
     start: "top top",
+    invalidateOnRefresh: true,
     // markers: true,
     onEnter: () => {
       // Only trigger on desktop
@@ -932,6 +933,7 @@ document.addEventListener("DOMContentLoaded", function () {
   animateHero();
 
   const navbarController = initNavbarAnimation();
+  // ScrollTrigger.refresh();
   const footerController = initFooterAnimation();
 
   // Font loading check
