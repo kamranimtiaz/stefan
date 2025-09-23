@@ -271,6 +271,7 @@ class ScrollAnimationManager {
   getAnimationConfigs() {
     return {
       "text-reveal": this.setupTextReveal.bind(this),
+      "text-reveal-story": this.setupTextRevealStory.bind(this),
       "fade-in": this.setupFadeIn.bind(this),
       "slide-up": this.setupSlideUp.bind(this),
       "slide-left": this.setupSlideLeft.bind(this),
@@ -296,7 +297,7 @@ class ScrollAnimationManager {
       delay: parseFloat(dataset.scrollDelay) || 0,
       stagger: parseFloat(dataset.scrollStagger) || 0.1,
       ease: dataset.scrollEase || "power2.out",
-      toggleActions: dataset.scrollToggle || "play none none reverse",
+      toggleActions: dataset.scrollToggle || "play none none none",
       splitType: dataset.scrollSplit || "words",
       once: dataset.scrollOnce === "true",
       items: dataset.scrollItems || ".w-dyn-item",
@@ -352,6 +353,74 @@ class ScrollAnimationManager {
         index * config.stagger
       );
     });
+  }
+
+  /**
+   * Text reveal animation for story sections
+   * Uses the nearest parent .story_scroller as the trigger
+   */
+  setupTextRevealStory(element, config) {
+    // Ensure we have a valid DOM element
+  if (!element || typeof element.closest !== 'function') {
+    console.error('Invalid element passed to setupTextRevealStory:', element);
+    return;
+  }
+
+    // Find the nearest parent .story_scroller
+    const storyScroller = element.closest(".story_section");
+
+    if (!storyScroller) {
+      console.warn(
+        "No parent .story_scroller found for text-reveal-story animation, falling back to regular text-reveal"
+      );
+      return this.setupTextReveal(element, config);
+    }
+
+    // Split the text
+    const split = new SplitText(element, {
+      type: config.splitType,
+      wordsClass: "scroll-word",
+      charsClass: "scroll-char",
+      linesClass: "scroll-line",
+    });
+
+    const targets =
+      config.splitType === "words"
+        ? split.words
+        : config.splitType === "chars"
+        ? split.chars
+        : split.lines;
+
+    gsap.set(targets, { opacity: 0.3 });
+
+    const timeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: storyScroller, // Use the parent story_scroller as trigger
+        start: config.trigger,
+        end: config.end,
+        markers: true,
+        scrub: config.scrub || 1,
+        toggleActions: config.toggleActions,
+        once: config.once,
+      },
+    });
+
+    targets.forEach((target, index) => {
+      timeline.to(
+        target,
+        {
+          opacity: 1,
+          duration: config.duration,
+          ease: config.ease,
+        },
+        index * config.stagger
+      );
+    });
+
+    console.log(
+      "Applied text-reveal-story animation with trigger:",
+      storyScroller
+    );
   }
 
   /**
@@ -802,9 +871,8 @@ function initNavbarAnimation() {
   // Set initial state
   let isOpen = false;
 
-  function toggleNavbar() {
+  function openNavbar() {
     if (!isOpen) {
-      // Open navbar
       navKnob.classList.add("is-opened");
       navWrap.classList.add("is-opened");
       gsap.to(navMain, {
@@ -814,8 +882,11 @@ function initNavbarAnimation() {
       });
       isOpen = true;
       console.log("Navbar opened");
-    } else {
-      // Close navbar
+    }
+  }
+
+  function closeNavbar() {
+    if (isOpen) {
       navKnob.classList.remove("is-opened");
       navWrap.classList.remove("is-opened");
       gsap.to(navMain, {
@@ -828,22 +899,34 @@ function initNavbarAnimation() {
     }
   }
 
+  function toggleNavbar() {
+    if (!isOpen) {
+      openNavbar();
+    } else {
+      closeNavbar();
+    }
+  }
+
   // Add click event listener
   navKnob.addEventListener("click", toggleNavbar);
+
+  
+  // Add hover event listeners
+  navKnob.addEventListener("mouseenter", openNavbar);
+  
+  // Close navbar when leaving nav_wrap (only if it's open)
+  navWrap.addEventListener("mouseleave", closeNavbar);
 
   console.log("Navbar animation initialized");
 
   // Return public methods for external control
-  return {
-    open: () => {
-      if (!isOpen) toggleNavbar();
-    },
-    close: () => {
-      if (isOpen) toggleNavbar();
-    },
+    return {
+    open: openNavbar,
+    close: closeNavbar,
     toggle: toggleNavbar,
     isOpen: () => isOpen,
   };
+
 }
 
 function initFooterAnimation() {
@@ -866,7 +949,7 @@ function initFooterAnimation() {
     console.warn("Nav logo not found");
     return;
   }
-console.log(footerSection)
+  console.log(footerSection);
   ScrollTrigger.create({
     trigger: footerSection,
     // start: "bottom bottom-=10",   // fire 1px earlier
@@ -887,13 +970,11 @@ console.log(footerSection)
         ease: "power2.out",
       });
     },
-    onEnterBack: () => {
-      
-    },
-    onLeaveBack:() =>{
+    onEnterBack: () => {},
+    onLeaveBack: () => {
       console.log("Footer going out of the view");
       if (!isMobile()) {
-        console.log("Footer going out of the view")
+        console.log("Footer going out of the view");
         if (navWrap && navWrap.classList.contains("is-opened")) {
           navKnob.click(); // Triggers the existing navbar animation
         }
@@ -904,7 +985,7 @@ console.log(footerSection)
         duration: 0.5,
         ease: "power2.out",
       });
-    }
+    },
   });
 
   console.log("Footer animation initialized");
