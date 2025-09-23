@@ -398,7 +398,7 @@ class ScrollAnimationManager {
         trigger: storyScroller, // Use the parent story_scroller as trigger
         start: config.trigger,
         end: config.end,
-        markers: true,
+        // markers: true,
         scrub: config.scrub || 1,
         toggleActions: config.toggleActions,
         once: config.once,
