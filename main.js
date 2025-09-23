@@ -996,7 +996,7 @@ function initNavbarAnimation() {
 function initFooterAnimation() {
   const footerSection = document.querySelector(".footer_section");
   const navKnob = document.querySelector(".nav_link_knob");
-  const navLogos = document.querySelector(".nav_link_logo");
+  const navLogos = document.querySelectorAll(".nav_link_logo");
   const navWrap = document.querySelector(".nav_wrap");
   const footerHeading = document.querySelector(
     ".footer_section [data-scroll-animation] h2"
