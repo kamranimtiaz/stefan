@@ -1159,7 +1159,7 @@ function initFooterAnimation() {
   // ScrollTrigger for footer section
   ScrollTrigger.create({
     trigger: footerSection,
-    start: "top top-=100",
+    start: "top top+=10",
     // markers: true,
     invalidateOnRefresh: true,
     onEnter: () => {
