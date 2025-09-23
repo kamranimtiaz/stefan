@@ -361,10 +361,10 @@ class ScrollAnimationManager {
    */
   setupTextRevealStory(element, config) {
     // Ensure we have a valid DOM element
-  if (!element || typeof element.closest !== 'function') {
-    console.error('Invalid element passed to setupTextRevealStory:', element);
-    return;
-  }
+    if (!element || typeof element.closest !== "function") {
+      console.error("Invalid element passed to setupTextRevealStory:", element);
+      return;
+    }
 
     // Find the nearest parent .story_scroller
     const storyScroller = element.closest(".story_section");
@@ -723,7 +723,7 @@ function animateHero() {
   const heroSection = document.querySelector(".main_hero_section");
   const darkOverlay = document.querySelector(".hero_dark_overlay");
   const heroVideo = document.querySelector(".main_hero_section video");
-  const navLogo = document.querySelector(".nav_link_logo");
+  const navLogos = document.querySelectorAll(".nav_link_logo");
 
   if (!heroSection) {
     console.warn("Hero section not found");
@@ -742,17 +742,21 @@ function animateHero() {
 
         if (progress >= 0.2) {
           // Fade out when progress reaches 20%
-          gsap.to(navLogo, {
-            opacity: 0,
-            duration: 0.3,
-            ease: "power2.out",
+          navLogos.forEach((navLogo) => {
+            gsap.to(navLogo, {
+              opacity: 0,
+              duration: 0.3,
+              ease: "power2.out",
+            });
           });
         } else {
           // Fade back in when progress is below 20%
-          gsap.to(navLogo, {
-            opacity: 1,
-            duration: 0.3,
-            ease: "power2.out",
+          navLogos.forEach((navLogo) => {
+            gsap.to(navLogo, {
+              opacity: 1,
+              duration: 0.3,
+              ease: "power2.out",
+            });
           });
         }
       },
@@ -910,23 +914,21 @@ function initNavbarAnimation() {
   // Add click event listener
   navKnob.addEventListener("click", toggleNavbar);
 
-  
   // Add hover event listeners
   navKnob.addEventListener("mouseenter", openNavbar);
-  
+
   // Close navbar when leaving nav_wrap (only if it's open)
   navWrap.addEventListener("mouseleave", closeNavbar);
 
   console.log("Navbar animation initialized");
 
   // Return public methods for external control
-    return {
+  return {
     open: openNavbar,
     close: closeNavbar,
     toggle: toggleNavbar,
     isOpen: () => isOpen,
   };
-
 }
 
 // function initFooterAnimation() {
@@ -994,9 +996,11 @@ function initNavbarAnimation() {
 function initFooterAnimation() {
   const footerSection = document.querySelector(".footer_section");
   const navKnob = document.querySelector(".nav_link_knob");
-  const navLogo = document.querySelector(".nav_link_logo");
+  const navLogos = document.querySelector(".nav_link_logo");
   const navWrap = document.querySelector(".nav_wrap");
-  const footerHeading = document.querySelector(".footer_section [data-scroll-animation] h2");
+  const footerHeading = document.querySelector(
+    ".footer_section [data-scroll-animation] h2"
+  );
 
   if (!footerSection) {
     console.warn("Footer section not found");
@@ -1008,7 +1012,7 @@ function initFooterAnimation() {
     return;
   }
 
-  if (!navLogo) {
+  if (!navLogos) {
     console.warn("Nav logo not found");
     return;
   }
@@ -1026,40 +1030,40 @@ function initFooterAnimation() {
   function navigateToNextPage() {
     // Find the current active nav link
     const currentNavLink = document.querySelector(".nav_link.w--current");
-    
+
     if (!currentNavLink) {
       console.warn("No current nav link found with w--current class");
       return;
     }
-    
+
     // Find the parent container with all nav links
     const navLinksWrap = currentNavLink.closest(".nav_links_wrap");
-    
+
     if (!navLinksWrap) {
       console.warn("Nav links wrap not found");
       return;
     }
-    
+
     // Get all nav links
     const allNavLinks = navLinksWrap.querySelectorAll(".nav_link");
-    
+
     // Find the index of the current link
     const currentIndex = Array.from(allNavLinks).indexOf(currentNavLink);
-    
+
     if (currentIndex === -1) {
       console.warn("Current nav link not found in the list");
       return;
     }
-    
+
     // Get the next link (or wrap to first if we're at the end)
     const nextIndex = (currentIndex + 1) % allNavLinks.length;
     const nextNavLink = allNavLinks[nextIndex];
-    
+
     if (nextNavLink && nextNavLink.href && nextNavLink.href !== "#") {
       console.log(`Navigating from index ${currentIndex} to ${nextIndex}`);
       console.log(`Current page: ${currentNavLink.href}`);
       console.log(`Next page: ${nextNavLink.href}`);
-      
+
       // Click the next nav link
       nextNavLink.click();
     } else {
@@ -1075,12 +1079,12 @@ function initFooterAnimation() {
     // Split the heading into lines
     split = new SplitText(footerHeading, {
       type: "lines",
-      linesClass: "footer-line"
+      linesClass: "footer-line",
     });
 
     // Apply initial styles to lines
     gsap.set(split.lines, {
-      "--line-width": "0%"
+      "--line-width": "0%",
     });
 
     // Create the animation timeline
@@ -1089,7 +1093,7 @@ function initFooterAnimation() {
       onComplete: () => {
         isAnimationComplete = true;
         navigateToNextPage();
-      }
+      },
     });
 
     // Animate each line one after another
@@ -1098,14 +1102,22 @@ function initFooterAnimation() {
     const lineDuration = staggerDelay * 0.8; // Each line takes 80% of its allocated time
 
     split.lines.forEach((line, index) => {
-      headingAnimation.to(line, {
-        "--line-width": "100%",
-        duration: lineDuration,
-        ease: "power2.out"
-      }, index * staggerDelay);
+      headingAnimation.to(
+        line,
+        {
+          "--line-width": "100%",
+          duration: lineDuration,
+          ease: "power2.out",
+        },
+        index * staggerDelay
+      );
     });
 
-    console.log(`Footer heading animation setup complete with ${split.lines.length} lines, ${lineDuration.toFixed(2)}s per line`);
+    console.log(
+      `Footer heading animation setup complete with ${
+        split.lines.length
+      } lines, ${lineDuration.toFixed(2)}s per line`
+    );
   }
 
   // Function to start heading animation
@@ -1122,13 +1134,13 @@ function initFooterAnimation() {
       headingAnimation.pause();
       headingAnimation.progress(0);
       isAnimationComplete = false;
-      
+
       if (split && split.lines) {
         gsap.set(split.lines, {
-          "--line-width": "0%"
+          "--line-width": "0%",
         });
       }
-      
+
       console.log("Footer heading animation reset");
     }
   }
@@ -1147,27 +1159,31 @@ function initFooterAnimation() {
   // ScrollTrigger for footer section
   ScrollTrigger.create({
     trigger: footerSection,
-    start: "top top",
+    start: "top top-=100",
+    // markers: true,
     invalidateOnRefresh: true,
     onEnter: () => {
+      console.log("footer entered")
       // Desktop behavior: open navbar then start animation
       if (!isMobile()) {
         if (navWrap && !navWrap.classList.contains("is-opened")) {
           navKnob.click(); // Triggers the existing navbar animation
         }
-        
+
         // Start heading animation (always, regardless of navbar state)
         startHeadingAnimation();
       } else {
         // Mobile behavior: start animation immediately (no navbar interaction)
         startHeadingAnimation();
       }
-      
+
       // Fade in the logo (both desktop and mobile)
-      gsap.to(navLogo, {
-        opacity: 1,
-        duration: 0.5,
-        ease: "power2.out",
+      navLogos.forEach((navLogo) => {
+        gsap.to(navLogo, {
+          opacity: 1,
+          duration: 0.3,
+          ease: "power2.out",
+        });
       });
     },
     onEnterBack: () => {
@@ -1176,26 +1192,28 @@ function initFooterAnimation() {
     },
     onLeaveBack: () => {
       console.log("Footer going out of the view");
-      
+
       if (!isMobile()) {
         if (navWrap && navWrap.classList.contains("is-opened")) {
           navKnob.click(); // Close navbar
         }
       }
-      
+
       // Fade out logo and reset animation
-      gsap.to(navLogo, {
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.out",
+      navLogos.forEach((navLogo) => {
+        gsap.to(navLogo, {
+          opacity: 0,
+          duration: 0.3,
+          ease: "power2.out",
+        });
       });
-      
+
       resetHeadingAnimation();
     },
     onLeave: () => {
       // Reset animation when leaving footer (scrolling down past it)
       resetHeadingAnimation();
-    }
+    },
   });
 
   console.log("Footer animation initialized with heading animation");
@@ -1210,7 +1228,7 @@ function initFooterAnimation() {
       if (headingAnimation) {
         headingAnimation.kill();
       }
-    }
+    },
   };
 }
 
