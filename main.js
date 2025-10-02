@@ -280,6 +280,7 @@ class ScrollAnimationManager {
       "rotate-in": this.setupRotateIn.bind(this),
       "stagger-children": this.setupStaggerChildren.bind(this),
       "horizontal-scroll": this.setupHorizontalScroll.bind(this),
+      "image-parallax": this.setupImageParallax.bind(this),
     };
   }
 
@@ -289,7 +290,7 @@ class ScrollAnimationManager {
   parseAnimationData(element) {
     const dataset = element.dataset;
     const config = {
-      type: dataset.scrollAnimation || "fade-in",
+      type: dataset.scrollAnimation || null,
       trigger: dataset.scrollTrigger || "top 80%",
       end: dataset.scrollEnd || "bottom 20%",
       scrub: dataset.scrollScrub === "true",
@@ -302,6 +303,7 @@ class ScrollAnimationManager {
       once: dataset.scrollOnce === "true",
       items: dataset.scrollItems || ".w-dyn-item",
       heightMultiplier: parseFloat(dataset.scrollHeightMultiplier) || 50,
+      parallaxAmount: parseFloat(dataset.scrollParallaxAmount) || 50,
     };
 
     return config;
@@ -614,6 +616,30 @@ class ScrollAnimationManager {
   }
 
   /**
+   * Image parallax animation
+   * Translates the image as you scroll through the viewport
+   * Use data-scroll-parallax-amount to control translation amount (positive or negative)
+   */
+  setupImageParallax(element, config) {
+    const parallaxAmount = config.parallaxAmount;
+
+    gsap.to(element, {
+      y: parallaxAmount,
+      ease: "none",
+      scrollTrigger: {
+        trigger: element,
+        start: config.trigger,
+        end: config.end,
+        scrub: config.scrub !== false ? (config.scrub === true ? 1 : config.scrub) : false,
+        toggleActions: config.toggleActions,
+        once: config.once,
+      },
+    });
+
+    console.log(`Applied image-parallax animation with amount: ${parallaxAmount}px`);
+  }
+
+  /**
    * Initialize all animations
    */
   // initAnimations() {
@@ -655,6 +681,14 @@ class ScrollAnimationManager {
       async (element, index) => {
         return new Promise((resolve) => {
           const config = this.parseAnimationData(element);
+
+          // Skip if no animation type is specified
+          if (!config.type) {
+            console.log('Skipping element with empty data-scroll-animation:', element);
+            resolve({ success: true, type: 'skipped', index, skipped: true });
+            return;
+          }
+
           const animationSetup = animationConfigs[config.type];
 
           if (animationSetup) {
@@ -768,7 +802,7 @@ function animateHero() {
     heroTimeline.to(
       darkOverlay,
       {
-        opacity: 0.7,
+        opacity: 0.95,
         ease: "none",
       },
       0
@@ -850,6 +884,39 @@ function animateStoryScaling() {
       }),
     });
   }
+}
+
+function initStorylineToggle() {
+  const toggleButton = document.querySelector('[data-element="storyline-toggle"]');
+  const wrapper = document.querySelector('[data-element="storyline-wrapper"]');
+
+  if (!toggleButton) {
+    console.warn('Storyline toggle button not found');
+    return;
+  }
+
+  if (!wrapper) {
+    console.warn('Storyline wrapper not found');
+    return;
+  }
+
+  toggleButton.addEventListener('click', () => {
+    // Toggle class on button
+    toggleButton.classList.toggle('is-expanded');
+
+    // Toggle class on wrapper
+    wrapper.classList.toggle('is-expanded');
+
+    // Refresh ScrollTrigger after DOM update
+    setTimeout(() => {
+      ScrollTrigger.refresh();
+      console.log('ScrollTrigger refreshed after storyline toggle');
+    }, 50);
+
+    console.log('Storyline toggled:', wrapper.classList.contains('is-expanded') ? 'expanded' : 'collapsed');
+  });
+
+  console.log('Storyline toggle initialized');
 }
 
 function initNavbarAnimation() {
@@ -1024,7 +1091,6 @@ function initFooterAnimation() {
 
   let headingAnimation = null;
   let isAnimationComplete = false;
-  let split = null;
 
   // Function to navigate to the next page
   function navigateToNextPage() {
@@ -1076,14 +1142,8 @@ function initFooterAnimation() {
 
   // Function to setup heading animation
   function setupHeadingAnimation() {
-    // Split the heading into lines
-    split = new SplitText(footerHeading, {
-      type: "lines",
-      linesClass: "footer-line",
-    });
-
-    // Apply initial styles to lines
-    gsap.set(split.lines, {
+    // Apply initial styles to heading
+    gsap.set(footerHeading, {
       "--line-width": "0%",
     });
 
@@ -1096,27 +1156,17 @@ function initFooterAnimation() {
       },
     });
 
-    // Animate each line one after another
+    // Animate the heading itself
     const totalAnimationDuration = 10; // Total 10 seconds
-    const staggerDelay = totalAnimationDuration / split.lines.length;
-    const lineDuration = staggerDelay * 0.8; // Each line takes 80% of its allocated time
 
-    split.lines.forEach((line, index) => {
-      headingAnimation.to(
-        line,
-        {
-          "--line-width": "100%",
-          duration: lineDuration,
-          ease: "power2.out",
-        },
-        index * staggerDelay
-      );
+    headingAnimation.to(footerHeading, {
+      "--line-width": "100%",
+      duration: totalAnimationDuration,
+      ease: "linear",
     });
 
     console.log(
-      `Footer heading animation setup complete with ${
-        split.lines.length
-      } lines, ${lineDuration.toFixed(2)}s per line`
+      `Footer heading animation setup complete with ${totalAnimationDuration}s duration`
     );
   }
 
@@ -1135,21 +1185,11 @@ function initFooterAnimation() {
       headingAnimation.progress(0);
       isAnimationComplete = false;
 
-      if (split && split.lines) {
-        gsap.set(split.lines, {
-          "--line-width": "0%",
-        });
-      }
+      gsap.set(footerHeading, {
+        "--line-width": "0%",
+      });
 
       console.log("Footer heading animation reset");
-    }
-  }
-
-  // Function to cleanup split text
-  function cleanupSplitText() {
-    if (split) {
-      split.revert();
-      split = null;
     }
   }
 
@@ -1165,17 +1205,9 @@ function initFooterAnimation() {
     onEnter: () => {
       console.log("footer entered")
       // Desktop behavior: open navbar then start animation
-      if (!isMobile()) {
-        if (navWrap && !navWrap.classList.contains("is-opened")) {
-          navKnob.click(); // Triggers the existing navbar animation
-        }
-
-        // Start heading animation (always, regardless of navbar state)
-        startHeadingAnimation();
-      } else {
+      
         // Mobile behavior: start animation immediately (no navbar interaction)
         startHeadingAnimation();
-      }
 
       // Fade in the logo (both desktop and mobile)
       navLogos.forEach((navLogo) => {
@@ -1192,12 +1224,6 @@ function initFooterAnimation() {
     },
     onLeaveBack: () => {
       console.log("Footer going out of the view");
-
-      if (!isMobile()) {
-        if (navWrap && navWrap.classList.contains("is-opened")) {
-          navKnob.click(); // Close navbar
-        }
-      }
 
       // Fade out logo and reset animation
       navLogos.forEach((navLogo) => {
@@ -1224,7 +1250,6 @@ function initFooterAnimation() {
     resetAnimation: resetHeadingAnimation,
     isComplete: () => isAnimationComplete,
     cleanup: () => {
-      cleanupSplitText();
       if (headingAnimation) {
         headingAnimation.kill();
       }
@@ -1257,6 +1282,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const navbarController = initNavbarAnimation();
   // ScrollTrigger.refresh();
   const footerController = initFooterAnimation();
+  initStorylineToggle();
 
   // Font loading check
   // if (document.fonts) {
