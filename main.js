@@ -781,11 +781,15 @@ function animateHero() {
               opacity: 0,
               duration: 0.3,
               ease: "power2.out",
+              onComplete: () => {
+                navLogo.style.pointerEvents = "none";
+              },
             });
           });
         } else {
           // Fade back in when progress is below 20%
           navLogos.forEach((navLogo) => {
+            navLogo.style.pointerEvents = "auto";
             gsap.to(navLogo, {
               opacity: 1,
               duration: 0.3,
@@ -1094,16 +1098,12 @@ function initFooterAnimation() {
 
   // Function to navigate to the next page
   function navigateToNextPage() {
-    // Find the current active nav link
-    const currentNavLink = document.querySelector(".nav_link.w--current");
+    // Check if current page is home or logo link has w--current
+    const logoLink = document.querySelector(".nav_link_logo");
+    const isHomePage = logoLink && logoLink.classList.contains("w--current");
 
-    if (!currentNavLink) {
-      console.warn("No current nav link found with w--current class");
-      return;
-    }
-
-    // Find the parent container with all nav links
-    const navLinksWrap = currentNavLink.closest(".nav_links_wrap");
+    // Find the nav links wrap
+    const navLinksWrap = document.querySelector(".nav_links_wrap");
 
     if (!navLinksWrap) {
       console.warn("Nav links wrap not found");
@@ -1112,6 +1112,32 @@ function initFooterAnimation() {
 
     // Get all nav links
     const allNavLinks = navLinksWrap.querySelectorAll(".nav_link");
+
+    if (allNavLinks.length === 0) {
+      console.warn("No nav links found");
+      return;
+    }
+
+    // If on home page, go to first link
+    if (isHomePage) {
+      const firstNavLink = allNavLinks[0];
+      if (firstNavLink && firstNavLink.href && firstNavLink.href !== "#") {
+        console.log("On home page, navigating to first nav link");
+        console.log(`First page: ${firstNavLink.href}`);
+        window.location.href = firstNavLink.href;
+      } else {
+        console.warn("First nav link not found or has no valid href");
+      }
+      return;
+    }
+
+    // Find the current active nav link
+    const currentNavLink = document.querySelector(".nav_link.w--current");
+
+    if (!currentNavLink) {
+      console.warn("No current nav link found with w--current class");
+      return;
+    }
 
     // Find the index of the current link
     const currentIndex = Array.from(allNavLinks).indexOf(currentNavLink);
@@ -1130,8 +1156,8 @@ function initFooterAnimation() {
       console.log(`Current page: ${currentNavLink.href}`);
       console.log(`Next page: ${nextNavLink.href}`);
 
-      // Click the next nav link
-      nextNavLink.click();
+      // Use window.location.href instead of click to preserve history
+      window.location.href = nextNavLink.href;
     } else {
       console.warn("Next nav link not found or has no valid href");
       if (nextNavLink) {
@@ -1211,6 +1237,7 @@ function initFooterAnimation() {
 
       // Fade in the logo (both desktop and mobile)
       navLogos.forEach((navLogo) => {
+        navLogo.style.pointerEvents = "auto";
         gsap.to(navLogo, {
           opacity: 1,
           duration: 0.3,
@@ -1231,6 +1258,9 @@ function initFooterAnimation() {
           opacity: 0,
           duration: 0.3,
           ease: "power2.out",
+          onComplete: () => {
+            navLogo.style.pointerEvents = "none";
+          },
         });
       });
 
