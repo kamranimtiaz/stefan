@@ -815,21 +815,97 @@ function animateHero() {
     console.warn("Hero dark overlay element not found");
   }
 
-  // Add video translation animation if element exists
-  if (heroVideo) {
-    heroTimeline.to(
-      heroVideo,
-      {
-        yPercent: -7.5,
-        ease: "none",
-      },
-      0
-    ); // Start at time 0 (same time as overlay)
+  // Add video translation animation for all hero-bg elements
+  const heroBgElements = document.querySelectorAll('[data-element="hero-bg"]');
+
+  if (heroBgElements.length > 0) {
+    heroBgElements.forEach((bgElement) => {
+      const mediaElement = bgElement.querySelector('video, img');
+
+      if (mediaElement) {
+        heroTimeline.to(
+          mediaElement,
+          {
+            yPercent: -10,
+            ease: "none",
+          },
+          0
+        ); // Start at time 0 (same time as overlay)
+      }
+    });
+    console.log(`Applied animation to ${heroBgElements.length} hero-bg element(s)`);
   } else {
-    console.warn("Hero video element not found");
+    console.warn("No hero-bg elements found with data-element='hero-bg'");
   }
 
   console.log("Hero timeline animation initialized with available elements");
+}
+
+function animateLifeTime() {
+  const lifeSection = document.querySelector(".life_time_section");
+  const lifeSubHeader = document.querySelector(".life_content_sub-header");
+  const lifeLightOverlay = document.querySelector(".life_time_light_overlay");
+  const lifeImage = document.querySelector(".life_image_wrap img");
+
+  if (!lifeSection) {
+    console.warn("Life time section not found");
+    return;
+  }
+
+  // Create a unified timeline for life time animations
+  const lifeTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: lifeSection,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
+    },
+  });
+
+  // Add sub-header opacity animation if element exists
+  if (lifeSubHeader) {
+    lifeTimeline.to(
+      lifeSubHeader,
+      {
+        opacity: 0,
+        ease: "none",
+      },
+      0
+    ); // Start at time 0
+  } else {
+    console.warn("Life content sub-header element not found");
+  }
+
+  // Add light overlay opacity animation if element exists
+  if (lifeLightOverlay) {
+    lifeTimeline.to(
+      lifeLightOverlay,
+      {
+        opacity: 1,
+        duration: 0.95,
+        ease: "none",
+      },
+      0
+    ); // Start at time 0 (same time as sub-header)
+  } else {
+    console.warn("Life time light overlay element not found");
+  }
+
+  // Add image translation animation if element exists
+  if (lifeImage) {
+    lifeTimeline.to(
+      lifeImage,
+      {
+        yPercent: -10,
+        ease: "none",
+      },
+      0
+    ); // Start at time 0 (same time as other animations)
+  } else {
+    console.warn("Life image element not found");
+  }
+
+  console.log("Life time timeline animation initialized with available elements");
 }
 
 function animateScrollerHeadings() {
@@ -1001,68 +1077,6 @@ function initNavbarAnimation() {
     isOpen: () => isOpen,
   };
 }
-
-// function initFooterAnimation() {
-//   const footerSection = document.querySelector(".footer_section");
-//   const navKnob = document.querySelector(".nav_link_knob");
-//   const navLogo = document.querySelector(".nav_link_logo");
-//   const navWrap = document.querySelector(".nav_wrap");
-
-//   if (!footerSection) {
-//     console.warn("Footer section not found");
-//     return;
-//   }
-
-//   if (!navKnob) {
-//     console.warn("Nav knob not found");
-//     return;
-//   }
-
-//   if (!navLogo) {
-//     console.warn("Nav logo not found");
-//     return;
-//   }
-//   console.log(footerSection);
-//   ScrollTrigger.create({
-//     trigger: footerSection,
-//     // start: "bottom bottom-=10",   // fire 1px earlier
-//     start: "top top",
-//     invalidateOnRefresh: true,
-//     // markers: true,
-//     onEnter: () => {
-//       // Only trigger on desktop
-//       if (!isMobile()) {
-//         if (navWrap && !navWrap.classList.contains("is-opened")) {
-//           navKnob.click(); // Triggers the existing navbar animation
-//         }
-//       }
-//       // Fade in the logo
-//       gsap.to(navLogo, {
-//         opacity: 1,
-//         duration: 0.5,
-//         ease: "power2.out",
-//       });
-//     },
-//     onEnterBack: () => {},
-//     onLeaveBack: () => {
-//       console.log("Footer going out of the view");
-//       if (!isMobile()) {
-//         console.log("Footer going out of the view");
-//         if (navWrap && navWrap.classList.contains("is-opened")) {
-//           navKnob.click(); // Triggers the existing navbar animation
-//         }
-//       }
-//       // Check if navbar is open and close it
-//       gsap.to(navLogo, {
-//         opacity: 0,
-//         duration: 0.5,
-//         ease: "power2.out",
-//       });
-//     },
-//   });
-
-//   console.log("Footer animation initialized");
-// }
 
 function initFooterAnimation() {
   const footerSection = document.querySelector(".footer_section");
@@ -1308,6 +1322,7 @@ document.addEventListener("DOMContentLoaded", function () {
   window.DesktopScrollManager = DesktopScrollManager;
   window.scrollManager = scrollManager;
   animateHero();
+  animateLifeTime();
 
   const navbarController = initNavbarAnimation();
   // ScrollTrigger.refresh();
