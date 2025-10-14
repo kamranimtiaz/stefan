@@ -1301,6 +1301,126 @@ function initFooterAnimation() {
   };
 }
 
+function animateAdventureTrack() {
+  // Run only on desktop
+  if (isMobile()) {
+    console.log("Adventure track animation skipped on mobile");
+    return;
+  }
+
+  const adventureSection = document.querySelector("#adventure_section");
+  const trackWrap = document.querySelector(".adventure_track-wrap");
+  const trackDot = document.querySelector(".adventure_track-dot");
+  const trackPath = document.querySelector("#track-path");
+  const storylineWrapper = document.querySelector('[data-element="storyline-wrapper"]');
+
+  if (!adventureSection) {
+    console.warn("Adventure section not found");
+    return;
+  }
+
+  if (!trackWrap) {
+    console.warn("Adventure track wrap not found");
+    return;
+  }
+
+  if (!trackDot) {
+    console.warn("Adventure track dot not found");
+    return;
+  }
+
+  if (!trackPath) {
+    console.warn("Adventure track path not found");
+    return;
+  }
+
+  if (!storylineWrapper) {
+    console.warn("Storyline wrapper not found");
+    return;
+  }
+
+  // Register MotionPathPlugin
+  gsap.registerPlugin(MotionPathPlugin);
+
+  // Set initial state - hide track wrap and dot
+  gsap.set(trackWrap, { opacity: 0, visibility: "hidden" });
+  gsap.set(trackDot, { opacity: 0 });
+
+  // Function to check if animation should run
+  function shouldRunAnimation() {
+    return storylineWrapper.classList.contains('is-expanded');
+  }
+
+  // Create timeline for the animation
+  const timeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: adventureSection,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
+      // markers: true, // Uncomment for debugging
+      onUpdate: () => {
+        // Check if animation should be active
+        if (!shouldRunAnimation()) {
+          // Hide everything if storyline is not expanded
+          gsap.set(trackWrap, { opacity: 0, visibility: "hidden" });
+          gsap.set(trackDot, { opacity: 0 });
+        }
+      }
+    }
+  });
+
+  // Fade in the track wrap at the start
+  timeline.to(trackWrap, {
+    opacity: 1,
+    visibility: "visible",
+    duration: 0.05,
+    ease: "none"
+  }, 0);
+
+  // Add dot fade in at the start (only if storyline is expanded)
+  timeline.to(trackDot, {
+    opacity: 1,
+    duration: 0.05,
+    ease: "none"
+  }, 0);
+
+  // Animate dot along the path from bottom to top
+  timeline.to(trackDot, {
+    motionPath: {
+      path: "#track-path",
+      align: "#track-path",
+      alignOrigin: [0.5, 0.5],
+      autoRotate: false,
+      start: 1, // Start from bottom (100% of path)
+      end: 0    // End at top (0% of path)
+    },
+    duration: 0.9,
+    ease: "none"
+  }, 0.05);
+
+  // Fade out the track wrap near the end of the animation
+  timeline.to(trackWrap, {
+    opacity: 0,
+    visibility: "hidden",
+    duration: 0.05,
+    ease: "none"
+  }, 0.95); // Start fading out at 95% of the timeline
+
+  console.log("Adventure track animation initialized with storyline check");
+
+  // Return public methods for external control
+  return {
+    timeline: timeline,
+    refresh: () => {
+      ScrollTrigger.refresh();
+    },
+    cleanup: () => {
+      timeline.kill();
+    }
+  };
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   ScrollTrigger.defaults({ scroller: getScrollContainer() });
 
