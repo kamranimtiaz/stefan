@@ -1112,72 +1112,32 @@ function initFooterAnimation() {
 
   // Function to navigate to the next page
   function navigateToNextPage() {
-    // Check if current page is home or logo link has w--current
-    const logoLink = document.querySelector(".nav_link_logo");
-    const isHomePage = logoLink && logoLink.classList.contains("w--current");
+    // Find div with data-next-page attribute
+    const nextPageDiv = document.querySelector('div[data-next-page]');
 
-    // Find the nav links wrap
-    const navLinksWrap = document.querySelector(".nav_links_wrap");
-
-    if (!navLinksWrap) {
-      console.warn("Nav links wrap not found");
+    if (!nextPageDiv) {
+      console.warn("Div with data-next-page attribute not found");
       return;
     }
 
-    // Get all nav links
-    const allNavLinks = navLinksWrap.querySelectorAll(".nav_link");
+    // Find the link inside the div
+    const nextPageLink = nextPageDiv.querySelector('a');
 
-    if (allNavLinks.length === 0) {
-      console.warn("No nav links found");
+    if (!nextPageLink) {
+      console.warn("No link found inside div with data-next-page");
       return;
     }
 
-    // If on home page, go to first link
-    if (isHomePage) {
-      const firstNavLink = allNavLinks[0];
-      if (firstNavLink && firstNavLink.href && firstNavLink.href !== "#") {
-        console.log("On home page, navigating to first nav link");
-        console.log(`First page: ${firstNavLink.href}`);
-        window.location.href = firstNavLink.href;
-      } else {
-        console.warn("First nav link not found or has no valid href");
-      }
+    if (!nextPageLink.href || nextPageLink.href === "#") {
+      console.warn("Next page link has no valid href");
+      console.log("Link href:", nextPageLink.href);
       return;
     }
 
-    // Find the current active nav link
-    const currentNavLink = document.querySelector(".nav_link.w--current");
+    console.log(`Next page: ${nextPageLink.href}`);
 
-    if (!currentNavLink) {
-      console.warn("No current nav link found with w--current class");
-      return;
-    }
-
-    // Find the index of the current link
-    const currentIndex = Array.from(allNavLinks).indexOf(currentNavLink);
-
-    if (currentIndex === -1) {
-      console.warn("Current nav link not found in the list");
-      return;
-    }
-
-    // Get the next link (or wrap to first if we're at the end)
-    const nextIndex = (currentIndex + 1) % allNavLinks.length;
-    const nextNavLink = allNavLinks[nextIndex];
-
-    if (nextNavLink && nextNavLink.href && nextNavLink.href !== "#") {
-      console.log(`Navigating from index ${currentIndex} to ${nextIndex}`);
-      console.log(`Current page: ${currentNavLink.href}`);
-      console.log(`Next page: ${nextNavLink.href}`);
-
-      // Use window.location.href instead of click to preserve history
-      window.location.href = nextNavLink.href;
-    } else {
-      console.warn("Next nav link not found or has no valid href");
-      if (nextNavLink) {
-        console.log("Next link href:", nextNavLink.href);
-      }
-    }
+    // Click the link to trigger navigation (preserves any click handlers)
+    nextPageLink.click();
   }
 
   // Function to setup heading animation
