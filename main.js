@@ -1381,6 +1381,123 @@ function animateAdventureTrack() {
   };
 }
 
+/**
+ * Initialize Venn Diagram Tab System
+ * Handles tab switching via hover on desktop and click on mobile
+ * Shows/hides corresponding panels with .is-opened class
+ */
+function initVennDiagramTabs() {
+  // Find all tab links
+  const tabLinks = document.querySelectorAll('[data-tab-link]');
+
+  // Guard: Check if tab links exist
+  if (!tabLinks || tabLinks.length === 0) {
+    console.warn('No elements with data-tab-link found');
+    return;
+  }
+
+  // Find all tab panels
+  const tabPanels = document.querySelectorAll('[data-tab-panel]');
+
+  // Guard: Check if tab panels exist
+  if (!tabPanels || tabPanels.length === 0) {
+    console.warn('No elements with data-tab-panel found');
+    return;
+  }
+
+  console.log(`Found ${tabLinks.length} tab links and ${tabPanels.length} tab panels`);
+
+  /**
+   * Switch to a specific tab
+   * @param {string} tabName - The name of the tab to switch to
+   */
+  function switchToTab(tabName) {
+    // Hide all panels first
+    tabPanels.forEach(panel => {
+      panel.classList.remove('is-opened');
+      panel.style.display = 'none';
+    });
+
+    // Find and show the target panel
+    const targetPanel = document.querySelector(`[data-tab-panel="${tabName}"]`);
+    if (targetPanel) {
+      targetPanel.classList.add('is-opened');
+      targetPanel.style.display = 'block';
+      console.log(`Switched to tab: ${tabName}`);
+    } else {
+      console.warn(`No panel found for tab: ${tabName}`);
+    }
+  }
+
+  /**
+   * Setup initial state - show default tab
+   */
+  function setupInitialState() {
+    // Hide all panels initially
+    tabPanels.forEach(panel => {
+      panel.style.display = 'none';
+      panel.classList.remove('is-opened');
+    });
+
+    // Show the default panel
+    const defaultPanel = document.querySelector('[data-tab-panel="default"]');
+    if (defaultPanel) {
+      defaultPanel.classList.add('is-opened');
+      defaultPanel.style.display = 'block';
+      console.log('Default tab initialized');
+    } else {
+      console.warn('No default tab panel found');
+    }
+  }
+
+  // Setup initial state
+  setupInitialState();
+
+  // Check if mobile
+  const isMobileDevice = isMobile();
+
+  // Attach event listeners based on device type
+  tabLinks.forEach(link => {
+    const tabName = link.getAttribute('data-tab-link');
+
+    if (!tabName) {
+      console.warn('Tab link found without data-tab-link value:', link);
+      return;
+    }
+
+    if (isMobileDevice) {
+      // Mobile: Use click/tap events
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchToTab(tabName);
+      });
+
+      link.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        switchToTab(tabName);
+      }, { passive: false });
+
+      console.log(`Mobile: Attached click events to tab link: ${tabName}`);
+    } else {
+      // Desktop: Use hover events
+      link.addEventListener('mouseenter', () => {
+        switchToTab(tabName);
+      });
+
+      console.log(`Desktop: Attached hover events to tab link: ${tabName}`);
+    }
+  });
+
+  console.log(`Venn diagram tabs initialized for ${isMobileDevice ? 'mobile' : 'desktop'}`);
+
+  // Return public methods for external control
+  return {
+    switchToTab: switchToTab,
+    reset: setupInitialState,
+    isMobile: isMobileDevice
+  };
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   ScrollTrigger.defaults({ scroller: getScrollContainer() });
 
@@ -1408,6 +1525,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // ScrollTrigger.refresh();
   const footerController = initFooterAnimation();
   initStorylineToggle();
+
+  // Initialize Venn Diagram Tabs
+  const vennDiagramController = initVennDiagramTabs();
 
   // Font loading check
   // if (document.fonts) {
