@@ -1423,6 +1423,7 @@ function initVennDiagramTabs() {
     if (targetPanel) {
       targetPanel.classList.add('is-opened');
       targetPanel.style.display = 'block';
+      ScrollTrigger.refresh();
       console.log(`Switched to tab: ${tabName}`);
     } else {
       console.warn(`No panel found for tab: ${tabName}`);
