@@ -467,14 +467,21 @@ class ScrollAnimationManager {
       return;
     }
 
-    // Calculate and set the scroller height
-    const calculatedHeight = items.length * config.heightMultiplier;
-    element.style.height = `${calculatedHeight}svh`;
-
     // Calculate scroll distance
     const visibleWidth = element.offsetWidth;
     const wrapperWidth = listContainer.scrollWidth;
     const totalScrollDistance = wrapperWidth - visibleWidth;
+
+    // Guard: Check if horizontal scroll is actually needed
+    // Only apply the effect if content width exceeds visible width
+    if (totalScrollDistance <= 0) {
+      console.log(`Horizontal scroll skipped - not enough content (visible: ${visibleWidth}px, wrapper: ${wrapperWidth}px)`);
+      return;
+    }
+
+    // Calculate and set the scroller height
+    const calculatedHeight = items.length * config.heightMultiplier;
+    element.style.height = `${calculatedHeight}svh`;
 
     // Create the horizontal scroll animation
     const scrollAnimation = gsap.to(listContainer, {
