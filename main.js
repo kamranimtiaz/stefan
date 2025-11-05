@@ -1341,14 +1341,14 @@ function animateAdventureTrack() {
   timeline.to(trackWrap, {
     opacity: 1,
     visibility: "visible",
-    duration: 0.05,
+    duration: 0.02,
     ease: "none"
   }, 0);
 
   // Add dot fade in at the start (only if storyline is expanded)
   timeline.to(trackDot, {
     opacity: 1,
-    duration: 0.05,
+    duration: 0.02,
     ease: "none"
   }, 0);
 
@@ -1362,17 +1362,21 @@ function animateAdventureTrack() {
       start: 1, // Start from bottom (100% of path)
       end: 0    // End at top (0% of path)
     },
-    duration: 0.9,
+    duration: 0.96,
     ease: "none"
-  }, 0.05);
+  }, 0.02);
 
-  // Fade out the track wrap near the end of the animation
+  // Fade out the track wrap gradually from 96% to 100%
   timeline.to(trackWrap, {
     opacity: 0,
-    visibility: "hidden",
-    duration: 0.05,
-    ease: "none"
-  }, 0.95); // Start fading out at 95% of the timeline
+    duration: 0.04,
+    ease: "power2.out"
+  }, 0.96); // Start fading out at 96% of the timeline
+
+  // Set visibility to hidden at the very end
+  timeline.set(trackWrap, {
+    visibility: "hidden"
+  }, 1);
 
   console.log("Adventure track animation initialized with storyline check");
 
