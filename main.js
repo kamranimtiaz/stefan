@@ -1393,6 +1393,134 @@ function animateAdventureTrack() {
 }
 
 /**
+ * Initialize Handcraft Content-Visual Sync Animation
+ * Syncs content sections with their corresponding visuals
+ * Fades content in/out based on which visual is at screen center
+ * Includes direction-aware transitions
+ */
+function initHandcraftAnimation() {
+  // Get all content and visual elements
+  const contentElements = document.querySelectorAll('.handcraft_content');
+  const visualElements = document.querySelectorAll('.handcraft_content_visual_wrap');
+
+  // Guard: Check if elements exist
+  if (!contentElements || contentElements.length === 0) {
+    console.warn('No .handcraft_content elements found');
+    return;
+  }
+
+  if (!visualElements || visualElements.length === 0) {
+    console.warn('No .handcraft_content_visual_wrap elements found');
+    return;
+  }
+
+  // Verify we have matching pairs
+  if (contentElements.length !== visualElements.length) {
+    console.warn(`Mismatch: ${contentElements.length} content elements but ${visualElements.length} visual elements`);
+  }
+
+  console.log(`Found ${contentElements.length} content sections and ${visualElements.length} visual sections`);
+
+  // Set initial state - first content visible, others hidden
+  contentElements.forEach((content, index) => {
+    if (index === 0) {
+      gsap.set(content, { opacity: 1, visibility: 'visible' });
+    } else {
+      gsap.set(content, { opacity: 0, visibility: 'hidden' });
+    }
+  });
+
+  // Track current active index and animation state
+  let currentIndex = 0;
+  let targetIndex = 0;
+  let activeTimeline = null;
+
+  /**
+   * Switch to a specific content section with direction-aware fade
+   * @param {number} newIndex - The index of the content to show
+   * @param {number} direction - 1 for scrolling down, -1 for scrolling up
+   */
+  function switchContent(newIndex, direction) {
+    if (newIndex < 0 || newIndex >= contentElements.length) return;
+    if (newIndex === targetIndex) return; // Already targeting this index
+
+    // Kill any existing animation immediately
+    if (activeTimeline) {
+      activeTimeline.kill();
+      activeTimeline = null;
+    }
+
+    // Update target index immediately
+    targetIndex = newIndex;
+
+    // Hide all content elements except the target
+    contentElements.forEach((content, index) => {
+      if (index !== newIndex) {
+        gsap.set(content, { opacity: 0, visibility: 'hidden', y: 0 });
+      }
+    });
+
+    const newContent = contentElements[newIndex];
+
+    // Create timeline for showing new content
+    activeTimeline = gsap.timeline({
+      onComplete: () => {
+        activeTimeline = null;
+        currentIndex = newIndex;
+      }
+    });
+
+    // Fade in new content with directional movement
+    activeTimeline.fromTo(newContent,
+      {
+        opacity: 0,
+        y: direction * 20, // Start from below if scrolling down, from above if scrolling up
+        visibility: 'visible'
+      },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        ease: 'power2.inOut'
+      }
+    );
+
+    console.log(`Switched to content ${newIndex} (direction: ${direction > 0 ? 'down' : 'up'})`);
+  }
+
+  // Create ScrollTrigger for each visual element
+  visualElements.forEach((visual, index) => {
+    ScrollTrigger.create({
+      trigger: visual,
+      start: 'top center', // When top of visual hits center of screen
+      end: 'bottom center', // When bottom of visual hits center of screen
+      onEnter: () => {
+        // Scrolling down - visual entering from bottom
+        switchContent(index, 1);
+      },
+      onEnterBack: () => {
+        // Scrolling up - visual entering from top
+        switchContent(index, -1);
+      },
+      // markers: true, // Uncomment for debugging
+    });
+
+    console.log(`Created ScrollTrigger for visual ${index}`);
+  });
+
+  console.log('Handcraft content-visual sync animation initialized');
+
+  // Return public methods for external control
+  return {
+    switchContent: (index) => switchContent(index, 1),
+    getCurrentIndex: () => currentIndex,
+    refresh: () => {
+      ScrollTrigger.refresh();
+    }
+  };
+}
+
+/**
  * Initialize Venn Diagram Tab System
  * Handles tab switching via hover on desktop and click on mobile
  * Shows/hides corresponding panels with .is-opened class
@@ -1540,6 +1668,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize Venn Diagram Tabs
   const vennDiagramController = initVennDiagramTabs();
+
+  // Initialize Handcraft Animation
+  initHandcraftAnimation();
 
   // Font loading check
   // if (document.fonts) {
