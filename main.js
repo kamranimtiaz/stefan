@@ -1399,9 +1399,11 @@ function animateAdventureTrack() {
  * Includes direction-aware transitions
  */
 function initHandcraftAnimation() {
-  // Get all content and visual elements
+  // Get all content elements
   const contentElements = document.querySelectorAll('.handcraft_content');
-  const visualElements = document.querySelectorAll('.handcraft_content_visual_wrap');
+
+  // Get only visual elements that are inside .handcraft_visual_wrap
+  const visualElements = document.querySelectorAll('.handcraft_visual_wrap .handcraft_content_visual_wrap');
 
   // Guard: Check if elements exist
   if (!contentElements || contentElements.length === 0) {
@@ -1410,7 +1412,7 @@ function initHandcraftAnimation() {
   }
 
   if (!visualElements || visualElements.length === 0) {
-    console.warn('No .handcraft_content_visual_wrap elements found');
+    console.warn('No .handcraft_content_visual_wrap elements found inside .handcraft_visual_wrap');
     return;
   }
 
