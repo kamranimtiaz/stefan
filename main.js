@@ -1691,6 +1691,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize Handcraft Animation
   initHandcraftAnimation();
 
+  // Initialize Adventure Track Animation
+  animateAdventureTrack();
+
   // Font loading check
   // if (document.fonts) {
   //   document.fonts.ready.then(() => {
