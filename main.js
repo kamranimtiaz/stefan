@@ -974,36 +974,53 @@ function animateStoryScaling() {
 }
 
 function initStorylineToggle() {
-  const toggleButton = document.querySelector('[data-element="storyline-toggle"]');
-  const wrapper = document.querySelector('[data-element="storyline-wrapper"]');
+  // Find all dropdown containers
+  const dropdowns = document.querySelectorAll('[data-element="dropdown"]');
 
-  if (!toggleButton) {
-    console.warn('Storyline toggle button not found');
+  if (!dropdowns || dropdowns.length === 0) {
+    console.warn('No dropdown elements found');
     return;
   }
 
-  if (!wrapper) {
-    console.warn('Storyline wrapper not found');
-    return;
-  }
+  console.log(`Found ${dropdowns.length} dropdown(s)`);
 
-  toggleButton.addEventListener('click', () => {
-    // Toggle class on button
-    toggleButton.classList.toggle('is-expanded');
+  // Initialize each dropdown
+  dropdowns.forEach((dropdown, index) => {
+    const toggleButton = dropdown.querySelector('[data-element="dropdown-toggle"]');
+    const content = dropdown.querySelector('[data-element="dropdown-content"]');
 
-    // Toggle class on wrapper
-    wrapper.classList.toggle('is-expanded');
+    // Guard: Check if required elements exist
+    if (!toggleButton) {
+      console.warn(`Dropdown ${index}: toggle button [data-element="dropdown-toggle"] not found`);
+      return;
+    }
 
-    // Refresh ScrollTrigger after DOM update
-    setTimeout(() => {
-      ScrollTrigger.refresh();
-      console.log('ScrollTrigger refreshed after storyline toggle');
-    }, 50);
+    if (!content) {
+      console.warn(`Dropdown ${index}: content [data-element="dropdown-content"] not found`);
+      return;
+    }
 
-    console.log('Storyline toggled:', wrapper.classList.contains('is-expanded') ? 'expanded' : 'collapsed');
+    // Add click event listener to toggle button
+    toggleButton.addEventListener('click', () => {
+      // Toggle class on button
+      toggleButton.classList.toggle('is-expanded');
+
+      // Toggle class on content
+      content.classList.toggle('is-expanded');
+
+      // Refresh ScrollTrigger after DOM update
+      setTimeout(() => {
+        ScrollTrigger.refresh();
+        console.log(`ScrollTrigger refreshed after dropdown ${index} toggle`);
+      }, 50);
+
+      console.log(`Dropdown ${index} toggled:`, content.classList.contains('is-expanded') ? 'expanded' : 'collapsed');
+    });
+
+    console.log(`Dropdown ${index} initialized`);
   });
 
-  console.log('Storyline toggle initialized');
+  console.log('All dropdowns initialized');
 }
 
 function initNavbarAnimation() {
