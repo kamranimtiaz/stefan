@@ -1296,7 +1296,7 @@ function animateAdventureTrack() {
   const trackWrap = document.querySelector(".adventure_track-wrap");
   const trackDot = document.querySelector(".adventure_track-dot");
   const trackPath = document.querySelector("#track-path");
-  const storylineWrapper = document.querySelector('[data-element="storyline-wrapper"]');
+  const storylineWrapper = document.querySelector('[data-storyline-wrapper]');
 
   if (!adventureSection) {
     console.warn("Adventure section not found");
