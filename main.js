@@ -796,11 +796,13 @@ function animateHero() {
         } else {
           // Fade back in when progress is below 20%
           navLogos.forEach((navLogo) => {
-            navLogo.style.pointerEvents = "auto";
             gsap.to(navLogo, {
               opacity: 1,
               duration: 0.3,
               ease: "power2.out",
+              onComplete: () => {
+                navLogo.style.pointerEvents = "auto";
+              },
             });
           });
         }
