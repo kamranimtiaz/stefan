@@ -765,24 +765,26 @@ function animateHero() {
   const darkOverlay = document.querySelector(".hero_dark_overlay");
   const heroVideo = document.querySelector(".main_hero_section video");
   const navLogos = document.querySelectorAll(".nav_link_logo");
+  const pageMain = document.querySelector(".page_main");
 
   if (!heroSection) {
     console.warn("Hero section not found");
     return;
   }
 
-  // Create a unified timeline for all hero animations
-  const heroTimeline = gsap.timeline({
-    scrollTrigger: {
-      trigger: heroSection,
+  // Create ScrollTrigger for nav logo animation based on page_main
+  if (pageMain) {
+    ScrollTrigger.create({
+      trigger: pageMain,
       start: "top top",
       end: "bottom bottom",
-      scrub: true,
+      scroller: getScrollContainer(),
       onUpdate: (self) => {
-        const progress = self.progress;
+        // Get current scroll position
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-        if (progress >= 0.2) {
-          // Fade out when progress reaches 20%
+        if (scrollY > 50) {
+          // Fade out when scrolled more than 50px
           navLogos.forEach((navLogo) => {
             gsap.to(navLogo, {
               opacity: 0,
@@ -794,7 +796,7 @@ function animateHero() {
             });
           });
         } else {
-          // Fade back in when progress is below 20%
+          // Fade back in when scrolled less than 50px
           navLogos.forEach((navLogo) => {
             gsap.to(navLogo, {
               opacity: 1,
@@ -807,6 +809,18 @@ function animateHero() {
           });
         }
       },
+    });
+  } else {
+    console.warn("page_main not found, nav logo animation skipped");
+  }
+
+  // Create a unified timeline for all hero animations
+  const heroTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: heroSection,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
     },
   });
 
