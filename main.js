@@ -760,58 +760,93 @@ class ScrollAnimationManager {
     configs[name] = setupFunction.bind(this);
   }
 }
+/**
+ * Initialize nav logo fade in/out animation based on scroll position
+ * Works on all pages (not dependent on hero section)
+ */
+function initNavLogoAnimation() {
+  const navLogos = document.querySelectorAll(".nav_link_logo");
+  const pageMain = document.querySelector(".page_main");
+
+  if (!pageMain) {
+    console.warn("page_main not found, nav logo animation skipped");
+    return;
+  }
+
+  if (!navLogos || navLogos.length === 0) {
+    console.warn("No nav logos found, animation skipped");
+    return;
+  }
+
+  console.log("Nav logo animation setup starting...");
+  console.log("- pageMain found:", pageMain);
+  console.log("- navLogos found:", navLogos.length, "elements");
+  console.log("- Scroll container:", getScrollContainer());
+
+  ScrollTrigger.create({
+    trigger: pageMain,
+    start: "top top",
+    end: "bottom bottom",
+    scroller: getScrollContainer(),
+    onEnter: () => {
+      console.log("Nav logo ScrollTrigger: onEnter fired");
+    },
+    onUpdate: (self) => {
+      // Get current scroll position from the correct scroller
+      const scrollContainer = getScrollContainer();
+      let scrollY = 0;
+
+      if (scrollContainer === window) {
+        // Desktop: use window scroll position
+        scrollY = window.pageYOffset || document.documentElement.scrollTop;
+      } else {
+        // Mobile: use page_main scroll position
+        scrollY = scrollContainer.scrollTop || 0;
+      }
+
+      console.log("Nav logo animation - scrollY:", scrollY, "| threshold: 50px");
+
+      if (scrollY > 50) {
+        // Fade out when scrolled more than 50px
+        console.log("Fading OUT nav logos (scrollY > 50)");
+        navLogos.forEach((navLogo) => {
+          gsap.to(navLogo, {
+            opacity: 0,
+            duration: 0.3,
+            ease: "power2.out",
+            onComplete: () => {
+              navLogo.style.pointerEvents = "none";
+            },
+          });
+        });
+      } else {
+        // Fade back in when scrolled less than 50px
+        console.log("Fading IN nav logos (scrollY <= 50)");
+        navLogos.forEach((navLogo) => {
+          gsap.to(navLogo, {
+            opacity: 1,
+            duration: 0.3,
+            ease: "power2.out",
+            onComplete: () => {
+              navLogo.style.pointerEvents = "auto";
+            },
+          });
+        });
+      }
+    },
+  });
+
+  console.log("Nav logo ScrollTrigger created successfully");
+}
+
 function animateHero() {
   const heroSection = document.querySelector(".main_hero_section");
   const darkOverlay = document.querySelector(".hero_dark_overlay");
   const heroVideo = document.querySelector(".main_hero_section video");
-  const navLogos = document.querySelectorAll(".nav_link_logo");
-  const pageMain = document.querySelector(".page_main");
 
   if (!heroSection) {
     console.warn("Hero section not found");
     return;
-  }
-
-  // Create ScrollTrigger for nav logo animation based on page_main
-  if (pageMain) {
-    ScrollTrigger.create({
-      trigger: pageMain,
-      start: "top top",
-      end: "bottom bottom",
-      scroller: getScrollContainer(),
-      onUpdate: (self) => {
-        // Get current scroll position
-        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-
-        if (scrollY > 50) {
-          // Fade out when scrolled more than 50px
-          navLogos.forEach((navLogo) => {
-            gsap.to(navLogo, {
-              opacity: 0,
-              duration: 0.3,
-              ease: "power2.out",
-              onComplete: () => {
-                navLogo.style.pointerEvents = "none";
-              },
-            });
-          });
-        } else {
-          // Fade back in when scrolled less than 50px
-          navLogos.forEach((navLogo) => {
-            gsap.to(navLogo, {
-              opacity: 1,
-              duration: 0.3,
-              ease: "power2.out",
-              onComplete: () => {
-                navLogo.style.pointerEvents = "auto";
-              },
-            });
-          });
-        }
-      },
-    });
-  } else {
-    console.warn("page_main not found, nav logo animation skipped");
   }
 
   // Create a unified timeline for all hero animations
@@ -1693,6 +1728,11 @@ document.addEventListener("DOMContentLoaded", function () {
   // Make available globally
   window.DesktopScrollManager = DesktopScrollManager;
   window.scrollManager = scrollManager;
+
+  // Initialize nav logo animation (works on all pages)
+  initNavLogoAnimation();
+
+  // Initialize page-specific animations
   animateHero();
   animateLifeTime();
 
