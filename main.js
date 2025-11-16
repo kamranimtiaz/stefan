@@ -1838,11 +1838,11 @@ function initInPageLinkHandler() {
       return;
     }
 
-    // Small delay to ensure page is fully loaded
-    setTimeout(() => {
-      scrollToElement(targetElement, 20);
+    // Defer to next frame to ensure all animations are initialized
+    requestAnimationFrame(() => {
+      scrollToElement(targetElement, 0);
       console.log(`Scrolled to initial hash: ${hash}`);
-    }, 300);
+    });
   }
 
   // Find all anchor links on the page
@@ -1869,7 +1869,7 @@ function initInPageLinkHandler() {
     const targetElement = getTargetFromHash(hash);
 
     if (targetElement) {
-      scrollToElement(targetElement, 20);
+      scrollToElement(targetElement, 0);
     }
   });
 
