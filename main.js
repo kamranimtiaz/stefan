@@ -1337,12 +1337,6 @@ function initFooterAnimation() {
 }
 
 function animateAdventureTrack() {
-  // Run only on desktop
-  if (isMobile()) {
-    console.log("Adventure track animation skipped on mobile");
-    return;
-  }
-
   const adventureSection = document.querySelector("#adventure_section");
   const trackWrap = document.querySelector(".adventure_track-wrap");
   const trackDot = document.querySelector(".adventure_track-dot");
