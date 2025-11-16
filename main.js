@@ -1708,6 +1708,189 @@ function initVennDiagramTabs() {
   };
 }
 
+/**
+ * Handle in-page anchor links for mobile devices with custom scroller
+ * On desktop, Webflow's default handling works fine
+ * On mobile, we need custom handling because of the .page_wrap scroller
+ */
+function initInPageLinkHandler() {
+  // Only run on mobile devices
+  if (!isMobile()) {
+    console.log("In-page link handler: Skipped on desktop (using Webflow default)");
+    return;
+  }
+
+  console.log("Initializing in-page link handler for mobile");
+
+  /**
+   * Scroll to a target element smoothly
+   * @param {HTMLElement} targetElement - The element to scroll to
+   * @param {number} offset - Optional offset from top (default: 0)
+   */
+  function scrollToElement(targetElement, offset = 0) {
+    if (!targetElement) {
+      console.warn("scrollToElement: Target element not found");
+      return;
+    }
+
+    const scrollContainer = getScrollContainer();
+
+    if (scrollContainer === window) {
+      // Fallback to window scroll (shouldn't happen on mobile, but just in case)
+      const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      });
+    } else {
+      // Mobile: scroll the .page_wrap container
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const targetRect = targetElement.getBoundingClientRect();
+      const currentScroll = scrollContainer.scrollTop;
+
+      // Calculate target scroll position relative to the scroll container
+      const targetPosition = currentScroll + (targetRect.top - containerRect.top) - offset;
+
+      scrollContainer.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+      });
+
+      console.log(`Scrolled to element:`, {
+        target: targetElement,
+        targetPosition,
+        currentScroll,
+        offset
+      });
+    }
+  }
+
+  /**
+   * Parse hash from URL or href and return the target element
+   * @param {string} hash - The hash string (e.g., "#section-id")
+   * @returns {HTMLElement|null} - The target element or null
+   */
+  function getTargetFromHash(hash) {
+    if (!hash || hash === '#') return null;
+
+    // Remove the # if present
+    const id = hash.replace('#', '');
+
+    // Try to find by ID first
+    let target = document.getElementById(id);
+
+    // If not found by ID, try by name attribute (some anchors use name)
+    if (!target) {
+      target = document.querySelector(`[name="${id}"]`);
+    }
+
+    return target;
+  }
+
+  /**
+   * Handle click on anchor links
+   * @param {Event} e - The click event
+   */
+  function handleAnchorClick(e) {
+    const link = e.currentTarget;
+    const href = link.getAttribute('href');
+
+    // Only handle in-page links (starting with #)
+    if (!href || !href.startsWith('#')) {
+      return;
+    }
+
+    // Get the target element
+    const targetElement = getTargetFromHash(href);
+
+    if (!targetElement) {
+      console.warn(`In-page link target not found: ${href}`);
+      return;
+    }
+
+    // Prevent default behavior
+    e.preventDefault();
+
+    // Scroll to the target
+    scrollToElement(targetElement, 0); // 20px offset from top
+
+    // Update URL hash without jumping
+    if (history.pushState) {
+      history.pushState(null, null, href);
+    } else {
+      // Fallback for older browsers
+      location.hash = href;
+    }
+  }
+
+  /**
+   * Handle hash in URL on page load
+   */
+  function handleInitialHash() {
+    const hash = window.location.hash;
+
+    if (!hash || hash === '#') return;
+
+    const targetElement = getTargetFromHash(hash);
+
+    if (!targetElement) {
+      console.warn(`Initial hash target not found: ${hash}`);
+      return;
+    }
+
+    // Small delay to ensure page is fully loaded
+    setTimeout(() => {
+      scrollToElement(targetElement, 20);
+      console.log(`Scrolled to initial hash: ${hash}`);
+    }, 300);
+  }
+
+  // Find all anchor links on the page
+  const anchorLinks = document.querySelectorAll('a[href^="#"]');
+
+  if (anchorLinks.length === 0) {
+    console.log("No in-page anchor links found");
+    return;
+  }
+
+  // Attach click handlers to all anchor links
+  anchorLinks.forEach(link => {
+    link.addEventListener('click', handleAnchorClick, { passive: false });
+  });
+
+  console.log(`Attached in-page link handlers to ${anchorLinks.length} links`);
+
+  // Handle initial hash if present in URL
+  handleInitialHash();
+
+  // Handle hash changes (back/forward navigation)
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash;
+    const targetElement = getTargetFromHash(hash);
+
+    if (targetElement) {
+      scrollToElement(targetElement, 20);
+    }
+  });
+
+  // Return public methods
+  return {
+    scrollToElement,
+    getTargetFromHash,
+    refresh: () => {
+      // Re-attach handlers to new links (useful after dynamic content)
+      const newLinks = document.querySelectorAll('a[href^="#"]');
+      newLinks.forEach(link => {
+        // Remove old handler first (if exists)
+        link.removeEventListener('click', handleAnchorClick);
+        // Attach new handler
+        link.addEventListener('click', handleAnchorClick, { passive: false });
+      });
+      console.log(`Refreshed in-page link handlers for ${newLinks.length} links`);
+    }
+  };
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   ScrollTrigger.defaults({ scroller: getScrollContainer() });
 
@@ -1728,6 +1911,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // Make available globally
   window.DesktopScrollManager = DesktopScrollManager;
   window.scrollManager = scrollManager;
+
+  // Initialize in-page link handler (mobile only)
+  const inPageLinkHandler = initInPageLinkHandler();
+
+  // Make available globally for external use
+  window.inPageLinkHandler = inPageLinkHandler;
 
   // Initialize nav logo animation (works on all pages)
   initNavLogoAnimation();
