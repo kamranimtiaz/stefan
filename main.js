@@ -1885,6 +1885,148 @@ function initInPageLinkHandler() {
   };
 }
 
+/**
+ * Initialize Load More Component
+ * Shows only 6 items by default, toggles between showing all/less
+ * Adds .is-opened class to button when expanded
+ */
+function initLoadMoreComponent() {
+  // Find all load-more wrappers
+  const loadMoreWrappers = document.querySelectorAll('[data-element="load-more-component"]');
+
+  if (!loadMoreWrappers || loadMoreWrappers.length === 0) {
+    console.warn('No load-more components found');
+    return;
+  }
+
+  console.log(`Found ${loadMoreWrappers.length} load-more component(s)`);
+
+  // Initialize each wrapper
+  loadMoreWrappers.forEach((wrapper, wrapperIndex) => {
+    const itemsContainer = wrapper.querySelector('.w-dyn-items');
+    const button = wrapper.querySelector('[data-element="load-more"]');
+
+    // Guard: Check if required elements exist
+    if (!itemsContainer) {
+      console.warn(`Load-more component ${wrapperIndex}: .w-dyn-items not found`);
+      return;
+    }
+
+    if (!button) {
+      console.warn(`Load-more component ${wrapperIndex}: button with [data-element="load-more"] not found`);
+      return;
+    }
+
+    // Get all children
+    const allItems = Array.from(itemsContainer.children);
+
+    // Get visible count from data attribute, fallback to 6 if not specified
+    const visibleCount = parseInt(wrapper.getAttribute('data-visible-items')) || 6;
+
+    if (allItems.length === 0) {
+      console.warn(`Load-more component ${wrapperIndex}: No items found`);
+      return;
+    }
+
+    console.log(`Load-more component ${wrapperIndex}: Using visible count of ${visibleCount} from data-visible-items attribute`);
+
+    // State tracking
+    let isExpanded = false;
+
+    /**
+     * Hide items beyond the visible count
+     */
+    function hideExtraItems() {
+      allItems.forEach((item, index) => {
+        if (index >= visibleCount) {
+          gsap.set(item, {
+            display: 'none',
+            opacity: 0,
+            y: 20
+          });
+        } else {
+          gsap.set(item, {
+            display: 'block',
+            opacity: 1,
+            y: 0
+          });
+        }
+      });
+    }
+
+    /**
+     * Show all items with animation
+     */
+    function showAllItems() {
+      const hiddenItems = allItems.slice(visibleCount);
+
+      // Set initial state for animation
+      gsap.set(hiddenItems, { display: 'block' });
+
+      // Animate items in with stagger
+      gsap.to(hiddenItems, {
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        stagger: 0.1,
+        ease: 'power2.out',
+        onComplete: () => {
+          ScrollTrigger.refresh();
+        }
+      });
+    }
+
+    /**
+     * Hide extra items with animation
+     */
+    function hideItemsAnimated() {
+      const itemsToHide = allItems.slice(visibleCount);
+
+      // Animate items out
+      gsap.to(itemsToHide, {
+        opacity: 0,
+        y: 20,
+        duration: 0.3,
+        stagger: 0.05,
+        ease: 'power2.in',
+        onComplete: () => {
+          gsap.set(itemsToHide, { display: 'none' });
+          ScrollTrigger.refresh();
+        }
+      });
+    }
+
+    /**
+     * Toggle between showing all and showing limited items
+     */
+    function toggleItems() {
+      if (!isExpanded) {
+        // Expand: Show all items
+        showAllItems();
+        button.classList.add('is-expanded');
+        isExpanded = true;
+        console.log(`Load-more component ${wrapperIndex}: Expanded (showing ${allItems.length} items)`);
+      } else {
+        // Collapse: Hide extra items
+        hideItemsAnimated();
+        button.classList.remove('is-expanded');
+        isExpanded = false;
+        console.log(`Load-more component ${wrapperIndex}: Collapsed (showing ${visibleCount} items)`);
+      }
+    }
+
+    // Set initial state - hide items beyond visible count
+    hideExtraItems();
+
+    // Add click event listener to button
+    button.addEventListener('click', toggleItems);
+
+    console.log(`Load-more component ${wrapperIndex} initialized (${allItems.length} total items, showing ${visibleCount})`);
+  });
+
+  console.log('All load-more components initialized');
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   ScrollTrigger.defaults({ scroller: getScrollContainer() });
 
@@ -1932,6 +2074,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize Adventure Track Animation
   animateAdventureTrack();
+
+  // Initialize Load More Component
+  initLoadMoreComponent();
 
   // Font loading check
   // if (document.fonts) {
