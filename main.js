@@ -840,9 +840,9 @@ function initNavLogoAnimation() {
 }
 
 function animateHero() {
-  const heroSection = document.querySelector(".main_hero_section");
+  const heroSection = document.querySelector('[data-element="hero_section"]');
   const darkOverlay = document.querySelector(".hero_dark_overlay");
-  const heroVideo = document.querySelector(".main_hero_section video");
+  const heroVideo = document.querySelector('[data-element="hero_section"] video');
 
   if (!heroSection) {
     console.warn("Hero section not found");
@@ -1886,6 +1886,33 @@ function initInPageLinkHandler() {
 }
 
 /**
+ * Detect touch device and add is-slider class to sticky-wrap-div elements
+ */
+function initTouchDeviceSlider() {
+  // Check if touch/mobile device using existing isMobile() function
+  if (!isMobile()) {
+    console.log('Not a touch device, skipping is-slider class');
+    return;
+  }
+
+  // Find all elements with data-element="sticky-wrap-div"
+  const stickyWrapElements = document.querySelectorAll('[data-element="sticky-wrap-div"]');
+
+  if (!stickyWrapElements || stickyWrapElements.length === 0) {
+    console.warn('No elements with data-element="sticky-wrap-div" found');
+    return;
+  }
+
+  // Add is-slider class to each element
+  stickyWrapElements.forEach((element, index) => {
+    element.classList.add('is-slider');
+    console.log(`Added is-slider class to sticky-wrap-div element ${index + 1}`);
+  });
+
+  console.log(`Touch device detected: Added is-slider class to ${stickyWrapElements.length} element(s)`);
+}
+
+/**
  * Initialize Load More Component
  * Shows only 6 items by default, toggles between showing all/less
  * Adds .is-opened class to button when expanded
@@ -2077,6 +2104,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize Load More Component
   initLoadMoreComponent();
+
+  // Initialize touch device slider
+  initTouchDeviceSlider();
 
   // Font loading check
   // if (document.fonts) {
