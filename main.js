@@ -789,7 +789,7 @@ function initNavLogoAnimation() {
     end: "bottom bottom",
     scroller: getScrollContainer(),
     onEnter: () => {
-      console.log("Nav logo ScrollTrigger: onEnter fired");
+      
     },
     onUpdate: (self) => {
       // Get current scroll position from the correct scroller
@@ -803,12 +803,8 @@ function initNavLogoAnimation() {
         // Mobile: use page_main scroll position
         scrollY = scrollContainer.scrollTop || 0;
       }
-
-      console.log("Nav logo animation - scrollY:", scrollY, "| threshold: 50px");
-
       if (scrollY > 50) {
         // Fade out when scrolled more than 50px
-        console.log("Fading OUT nav logos (scrollY > 50)");
         navLogos.forEach((navLogo) => {
           gsap.to(navLogo, {
             opacity: 0,
@@ -821,7 +817,6 @@ function initNavLogoAnimation() {
         });
       } else {
         // Fade back in when scrolled less than 50px
-        console.log("Fading IN nav logos (scrollY <= 50)");
         navLogos.forEach((navLogo) => {
           gsap.to(navLogo, {
             opacity: 1,
@@ -1461,6 +1456,12 @@ function animateAdventureTrack() {
  * Includes direction-aware transitions
  */
 function initHandcraftAnimation() {
+  // Disable animation on devices smaller than 991px
+  if (window.innerWidth < 991) {
+    console.log('Handcraft animation disabled on devices smaller than 991px');
+    return;
+  }
+
   // Get all content elements
   const contentElements = document.querySelectorAll('.handcraft_content');
 
